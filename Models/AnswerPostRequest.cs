@@ -1,8 +1,12 @@
-﻿namespace QandA.Models
+﻿using System.ComponentModel.DataAnnotations;
+namespace QandA.Models
 {
     public class AnswerPostRequest
     {
-        public int QuestionId { get; set; }
+        [Required]
+        // Nullable because an int type defaults to 0 and if we don't pass it in the request will be assigned to 0 and we want it rewuired
+        public int? QuestionId { get; set; }
+        [Required]
         public string Content { get; set; }
         public string UserId { get; set; }
         public string UserName { get; set; }
