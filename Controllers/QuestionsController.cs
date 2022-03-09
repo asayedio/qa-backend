@@ -16,6 +16,7 @@ namespace QandA.Controllers
         {
             _dataRepository = dataRepository;
         }
+
         [HttpGet]
         public IEnumerable<QuestionGetManyResponse> GetQuestions(string search)
         {
@@ -45,7 +46,14 @@ namespace QandA.Controllers
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
         {
-            var savedQuestion = _dataRepository.PostQuestion(questionPostRequest);
+            var savedQuestion = _dataRepository.PostQuestion(new QuestionPostFullRequest
+            {
+                Title = questionPostRequest.Title,
+                Content = questionPostRequest.Content,
+                UserId = "1",
+                UserName = "bob.test@test.com",
+                Created = DateTime.UtcNow
+            });
             return CreatedAtAction(nameof(GetQuestion),
             new { questionId = savedQuestion.QuestionId },
             savedQuestion);
@@ -61,7 +69,7 @@ namespace QandA.Controllers
 
             questionPutRequest.Title = string.IsNullOrEmpty(questionPutRequest.Title) ? question.Title : questionPutRequest.Title;
             questionPutRequest.Content = string.IsNullOrEmpty(questionPutRequest.Content) ? question.Content : questionPutRequest.Content;
-            
+
             var savedQuestion = _dataRepository.PutQuestion(questionId, questionPutRequest);
             return savedQuestion;
         }
@@ -86,7 +94,14 @@ namespace QandA.Controllers
             if (!questionExists)
                 return NotFound();
 
-            var savedAnswer = _dataRepository.PostAnswer(answerPostRequest);
+            var savedAnswer = _dataRepository.PostAnswer(new AnswerPostFullRequest
+            {
+                QuestionId = answerPostRequest.QuestionId.Value,
+                Content = answerPostRequest.Content,
+                UserId = "1",
+                UserName = "bob.test@test.com",
+                Created = DateTime.UtcNow
+            });
             return savedAnswer;
         }
     }

@@ -56,7 +56,7 @@ namespace QandA.Data
                 return connection.Query<QuestionGetManyResponse>("EXEC dbo.Question_GetUnanswered");
             }
         }
-        public bool QuestionExists(int questionId)
+        public bool QuestionExists(int? questionId)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -67,7 +67,7 @@ namespace QandA.Data
         #endregion Read Services
 
         #region Write Services
-        public QuestionGetSingleResponse PostQuestion(QuestionPostRequest question)
+        public QuestionGetSingleResponse PostQuestion(QuestionPostFullRequest question)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
@@ -95,7 +95,7 @@ namespace QandA.Data
                 connection.Execute(@"EXEC dbo.Question_Delete @QuestionId = @QuestionId", new { QuestionId = questionId });
             }
         }
-        public AnswerGetResponse PostAnswer(AnswerPostRequest answer)
+        public AnswerGetResponse PostAnswer(AnswerPostFullRequest answer)
         {
             using (var connection = new SqlConnection(_connectionString))
             {
