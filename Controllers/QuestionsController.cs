@@ -18,12 +18,17 @@ namespace QandA.Controllers
         }
 
         [HttpGet]
-        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search)
+        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search, bool includeAnswers,int page = 1, int pageSize = 20)
         {
             if (string.IsNullOrEmpty(search))
-                return _dataRepository.GetQuestions();
+            {
+                if(includeAnswers)
+                    return _dataRepository.GetQuestionsWithAnswers();
+                else
+                    return _dataRepository.GetQuestions();
+            }
             else
-                return _dataRepository.GetQuestionsBySearch(search);
+                return _dataRepository.GetQuestionsBySearchWithPaging(search, page, pageSize);
         }
 
         [HttpGet("unanswered")]
@@ -44,7 +49,7 @@ namespace QandA.Controllers
         }
 
         [HttpPost]
-        public ActionResult<QuestionGetSingleResponse> PostQuestion(QuestionPostRequest questionPostRequest)
+        public ActionResult<QuestionGetSingleResponse> PostQuestion([FromBody] QuestionPostRequest questionPostRequest)
         {
             var savedQuestion = _dataRepository.PostQuestion(new QuestionPostFullRequest
             {
