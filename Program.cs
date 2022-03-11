@@ -1,5 +1,6 @@
 using DbUp;
 using QandA.Data;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,9 +14,21 @@ builder.Services.AddScoped<IDataRepository, DataRepository>();
 // Add MemoryCache 
 builder.Services.AddMemoryCache();
 builder.Services.AddSingleton<IQuestionCache, QuestionCache>();
-var app = builder.Build();
 
 ConfigurationManager configuration = builder.Configuration;
+
+// Authenticate with Auth0
+builder.Services.AddAuthentication(options => { 
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+}).AddJwtBearer(options => { 
+    options.Authority = configuration["Auth0:Authority"];
+    options.Audience = configuration["Auth0:Audience"];
+});
+
+var app = builder.Build();
+
+
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -39,6 +52,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseAuthentication();
 
 app.UseAuthorization();
 
