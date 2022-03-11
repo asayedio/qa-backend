@@ -10,6 +10,9 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IDataRepository, DataRepository>();
+// Add MemoryCache 
+builder.Services.AddMemoryCache();
+builder.Services.AddSingleton<IQuestionCache, QuestionCache>();
 var app = builder.Build();
 
 ConfigurationManager configuration = builder.Configuration;
