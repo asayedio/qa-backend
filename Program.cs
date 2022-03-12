@@ -31,7 +31,7 @@ builder.Services.AddAuthentication(options => {
 
 builder.Services.AddHttpClient();
 builder.Services.AddAuthorization(options => options.AddPolicy("MustBeQuestionAuthor", policy => policy.Requirements.Add(new MustBeQuestionAuthorRequirement())));
-builder.Services.AddScoped<IAuthorizationHandler, MustBeQuestionAuthorHandler>()
+builder.Services.AddScoped<IAuthorizationHandler, MustBeQuestionAuthorHandler>();
 builder.Services.AddHttpContextAccessor();
 
 
