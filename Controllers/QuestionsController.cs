@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using QandA.Data;
 using QandA.Models;
 
@@ -19,12 +20,15 @@ namespace QandA.Controllers
             _cache = questionCache;
         }
 
+        #region GET
+
+        [AllowAnonymous]
         [HttpGet]
-        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search, bool includeAnswers,int page = 1, int pageSize = 20)
+        public IEnumerable<QuestionGetManyResponse> GetQuestions(string search, bool includeAnswers, int page = 1, int pageSize = 20)
         {
             if (string.IsNullOrEmpty(search))
             {
-                if(includeAnswers)
+                if (includeAnswers)
                     return _dataRepository.GetQuestionsWithAnswers();
                 else
                     return _dataRepository.GetQuestions();
@@ -52,12 +56,16 @@ namespace QandA.Controllers
             if (question == null)
             {
                 question = _dataRepository.GetQuestion(questionId);
-                if(question == null)
+                if (question == null)
                     return NotFound();
                 _cache.Set(question);
             }
             return question;
         }
+
+        #endregion GET
+
+        #region POST
 
         [HttpPost]
         public ActionResult<QuestionGetSingleResponse> PostQuestion([FromBody] QuestionPostRequest questionPostRequest)
@@ -73,35 +81,6 @@ namespace QandA.Controllers
             return CreatedAtAction(nameof(GetQuestion),
             new { questionId = savedQuestion.QuestionId },
             savedQuestion);
-        }
-
-        [HttpPut("{questionId}")]
-        public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
-        {
-            var question = _dataRepository.GetQuestion(questionId);
-
-            if (question == null)
-                return NotFound();
-
-            questionPutRequest.Title = string.IsNullOrEmpty(questionPutRequest.Title) ? question.Title : questionPutRequest.Title;
-            questionPutRequest.Content = string.IsNullOrEmpty(questionPutRequest.Content) ? question.Content : questionPutRequest.Content;
-
-            var savedQuestion = _dataRepository.PutQuestion(questionId, questionPutRequest);
-            _cache.Remove(savedQuestion.QuestionId);
-            return savedQuestion;
-        }
-
-        [HttpDelete("{questionId}")]
-        public ActionResult DeleteQuestion(int questionId)
-        {
-            var question = _dataRepository.GetQuestion(questionId);
-            if (question == null)
-                return NotFound();
-
-            _dataRepository.DeleteQuestion(questionId);
-            _cache.Remove(questionId);
-            // HTTP status code 204 if the deletion is successful.
-            return NoContent();
         }
 
         [HttpPost("answer")]
@@ -123,5 +102,45 @@ namespace QandA.Controllers
             _cache.Remove(answerPostRequest.QuestionId.Value);
             return savedAnswer;
         }
+        #endregion POST
+
+        #region PUT
+
+        [Authorize(Policy = "MustBeQuestionAuthor")]
+        [HttpPut("{questionId}")]
+        public ActionResult<QuestionGetSingleResponse> PutQuestion(int questionId, QuestionPutRequest questionPutRequest)
+        {
+            var question = _dataRepository.GetQuestion(questionId);
+
+            if (question == null)
+                return NotFound();
+
+            questionPutRequest.Title = string.IsNullOrEmpty(questionPutRequest.Title) ? question.Title : questionPutRequest.Title;
+            questionPutRequest.Content = string.IsNullOrEmpty(questionPutRequest.Content) ? question.Content : questionPutRequest.Content;
+
+            var savedQuestion = _dataRepository.PutQuestion(questionId, questionPutRequest);
+            _cache.Remove(savedQuestion.QuestionId);
+            return savedQuestion;
+        }
+
+        #endregion PUT
+
+        #region DELETE
+
+        [Authorize(Policy = "MustBeQuestionAuthor")]
+        [HttpDelete("{questionId}")]
+        public ActionResult DeleteQuestion(int questionId)
+        {
+            var question = _dataRepository.GetQuestion(questionId);
+            if (question == null)
+                return NotFound();
+
+            _dataRepository.DeleteQuestion(questionId);
+            _cache.Remove(questionId);
+            // HTTP status code 204 if the deletion is successful.
+            return NoContent();
+        }
+
+        #endregion DELETE
     }
 }

@@ -1,6 +1,9 @@
-using DbUp;
-using QandA.Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Authorization;
+using QandA.Authorization;
+using QandA.Data;
+using DbUp;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +28,12 @@ builder.Services.AddAuthentication(options => {
     options.Authority = configuration["Auth0:Authority"];
     options.Audience = configuration["Auth0:Audience"];
 });
+
+builder.Services.AddHttpClient();
+builder.Services.AddAuthorization(options => options.AddPolicy("MustBeQuestionAuthor", policy => policy.Requirements.Add(new MustBeQuestionAuthorRequirement())));
+builder.Services.AddScoped<IAuthorizationHandler, MustBeQuestionAuthorHandler>()
+builder.Services.AddHttpContextAccessor();
+
 
 var app = builder.Build();
 
@@ -52,7 +61,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseRouting();
 app.UseAuthentication();
 
 app.UseAuthorization();
